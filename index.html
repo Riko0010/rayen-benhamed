@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Solaris Pro - Système Intelligent de Gestion Photovoltaïque</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-50 dark:bg-dark transition-colors duration-300">
+  <!-- Particles Background -->
+  <div class="particles" id="particles-container"></div>
+
+  <!-- Loading Screen -->
+  <div id="loading-screen" class="fixed inset-0 bg-gradient-to-br from-primary to-secondary z-50 flex items-center justify-center">
+    <div class="text-center text-white">
+      <div class="w-20 h-20 mx-auto mb-4 animate-float">
+        <i class="fas fa-solar-panel text-4xl"></i>
+      </div>
+      <h2 class="text-2xl font-bold mb-4">Solaris Pro</h2>
+      <div class="spinner mx-auto"></div>
+      <p class="mt-4 opacity-80">Initialisation du système...</p>
+    </div>
+  </div>
+
+  <!-- Auth Modal -->
+  <div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center p-4 fade-in" style="display: none;">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-2xl max-w-md w-full transform transition-all duration-300 scale-95 glass-card">
+      <div class="text-center mb-8">
+        <div class="w-20 h-20 bg-gradient-to-r from-primary to-secondary rounded-full flex items-center justify-center mx-auto mb-4 animate-float">
+          <i class="fas fa-solar-panel text-white text-3xl"></i>
+        </div>
+        <h2 class="text-3xl font-bold gradient-text">Solaris Pro</h2>
+        <p class="text-gray-600 dark:text-gray-300 mt-2">Système intelligent de gestion photovoltaïque</p>
+      </div>
+      <form id="auth-form" class="space-y-6">
+        <div>
+          <label for="auth-user" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Nom d'utilisateur</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <i class="fas fa-user text-gray-400"></i>
+            </div>
+            <input type="text" id="auth-user" class="w-full pl-10 pr-4 py-3 text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-300" placeholder="admin, user, tech, demo" required>
+          </div>
+        </div>
+        <div>
+          <label for="auth-pass" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Mot de passe</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <i class="fas fa-lock text-gray-400"></i>
+            </div>
+            <input type="password" id="auth-pass" class="w-full pl-10 pr-4 py-3 text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-300" placeholder="••••••••" required>
+            <button type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center transition-colors hover:text-primary" id="toggle-password">
+              <i class="fas fa-eye text-gray-400"></i>
+            </button>
+          </div>
+        </div>
+        
+        <div class="flex items-center justify-between">
+          <label class="flex items-center">
+            <input type="checkbox" id="remember-me" class="rounded border-gray-300 text-primary focus:ring-primary">
+            <span class="ml-2 text-sm text-gray-600 dark:text-gray-300">Se souvenir de moi</span>
+          </label>
+          <button type="button" id="biometric-login" class="text-sm text-primary hover:underline">
+            <i class="fas fa-fingerprint mr-1"></i>Empreinte
+          </button>
+        </div>
+        
+        <button type="submit" class="btn-advanced w-full">
+          <i class="fas fa-sign-in-alt mr-2"></i>Se connecter
+        </button>
+        
+        <div id="auth-msg" class="text-center min-h-[1.5rem] text-red-500"></div>
+        
+        <div class="text-xs text-gray-400 mt-3 text-center glass-card p-3 rounded-lg">
+          <b>Comptes de démonstration :</b><br>
+          <div class="grid grid-cols-2 gap-2 mt-2">
+            <span class="text-primary">admin / solaire2024</span>
+            <span class="text-user">user / user2024</span>
+            <span class="text-tech">tech / tech2024</span>
+            <span class="text-green-500">demo / demo123</span>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Main App -->
+  <div class="min-h-screen flex flex-col" id="main-app" style="display: none;">
+    <!-- Header -->
+    <header class="bg-white dark:bg-gray-800 shadow-sm z-30 sticky top-0 glass-card rounded-none">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16 items-center">
+          <!-- Mobile menu button -->
+          <button id="mobile-menu-btn" class="md:hidden p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+            <i class="fas fa-bars"></i>
+          </button>
+          
+          <!-- Logo -->
+          <div class="flex items-center">
+            <div class="flex-shrink-0 flex items-center">
+              <div class="w-10 h-10 rounded-full bg-gradient-to-r from-primary to-secondary flex items-center justify-center animate-float">
+                <i class="fas fa-solar-panel text-white"></i>
+              </div>
+              <div class="ml-3 hidden md:block">
+                <span class="text-xl font-bold gradient-text">Solaris Pro</span>
+                <div class="text-xs text-gray-500 dark:text-gray-400">v2.1.0 • AI Enhanced</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Search Bar -->
+          <div class="hidden lg:flex flex-1 max-w-lg mx-8">
+            <div class="relative w-full">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <i class="fas fa-search text-gray-400"></i>
+              </div>
+              <input type="text" id="global-search" class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white" placeholder="Rechercher...">
+              <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                <kbd class="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-600 rounded">⌘K</kbd>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Right side -->
+          <div class="flex items-center space-x-2 md:space-x-4">
+            <!-- Dark mode toggle -->
+            <button id="dark-mode-toggle" class="p-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+              <i class="fas fa-moon" id="dark-icon"></i>
+              <i class="fas fa-sun hidden" id="light-icon"></i>
+            </button>
+            
+            <!-- User profile -->
+            <div class="relative">
+              <button id="user-menu-btn" class="flex items-center space-x-2 focus:outline-none p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                <div id="header-avatar" class="h-8 w-8 rounded-full bg-gradient-to-r from-primary to-secondary flex items-center justify-center text-white">
+                  <span>AD</span>
+                </div>
+                <div class="hidden md:block text-left">
+                  <div class="flex items-center">
+                    <span id="header-username" class="text-sm font-medium text-gray-700 dark:text-gray-300">Admin</span>
+                    <i class="fas fa-chevron-down text-xs text-gray-500 ml-1"></i>
+                  </div>
+                  <span id="header-role" class="text-xs text-gray-500 dark:text-gray-400">Administrateur</span>
+                </div>
+              </button>
+              
+              <!-- User dropdown -->
+              <div id="user-dropdown" class="hidden absolute right-0 mt-2 w-64 bg-white dark:bg-gray-700 rounded-lg shadow-lg z-50 border border-gray-200 dark:border-gray-600 glass-card">
+                <div class="p-4 border-b border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center">
+                    <div id="dropdown-avatar" class="h-12 w-12 rounded-full bg-gradient-to-r from-primary to-secondary flex items-center justify-center text-white">
+                      <span>AD</span>
+                    </div>
+                    <div class="ml-3">
+                      <p id="dropdown-username" class="text-sm font-medium text-gray-900 dark:text-white">Admin</p>
+                      <p id="dropdown-email" class="text-xs text-gray-500 dark:text-gray-400">admin@solaris.tn</p>
+                      <p id="dropdown-role" class="text-xs text-primary">Administrateur</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="py-1">
+                  <a href="#" class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+                    <i class="fas fa-user mr-3"></i>Mon Profil
+                  </a>
+                  <a href="#" class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+                    <i class="fas fa-chart-line mr-3"></i>Mes Statistiques
+                  </a>
+                  <a href="#" class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+                    <i class="fas fa-cog mr-3"></i>Paramètres
+                  </a>
+                  <div class="border-t border-gray-200 dark:border-gray-600 mt-1 pt-1">
+                    <a href="#" id="logout-btn" class="flex items-center px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+                      <i class="fas fa-sign-out-alt mr-3"></i>Déconnexion
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Sidebar + Main Content -->
+    <div class="flex flex-1 overflow-hidden">
+      <!-- Desktop Sidebar -->
+      <aside class="hidden md:flex md:flex-shrink-0 overflow-y-auto h-screen">
+        <div class="flex flex-col w-64 border-r border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 transition-colors glass-card rounded-none">
+          <div class="flex-1 flex flex-col pt-5 pb-4 overflow-y-auto scrollbar-hide">
+            <!-- Sidebar navigation -->
+            <nav class="flex-1 px-4 space-y-1">
+              <div class="space-y-2">
+                <p class="px-4 py-2 text-xs font-bold text-gray-400 dark:text-gray-400 uppercase tracking-widest border-b border-white/10 bg-gray-800/60 backdrop-blur-sm">
+                  GÉNÉRAL
+                </p>
+                <a href="#dashboard" class="nav-link flex items-center px-3 py-2 text-sm font-medium rounded-md text-primary bg-primary/10 transition-colors">
+                  <i class="fas fa-tachometer-alt mr-3 text-primary"></i>
+                  Tableau de bord
+                </a>
+                <a href="#analytics" class="nav-link flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                  <i class="fas fa-chart-bar mr-3"></i>
+                  Analytics Avancées
+                </a>
+                <a href="#production" class="nav-link flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                  <i class="fas fa-bolt mr-3"></i>
+                  Production
+                </a>
+              </div>
+              <div class="space-y-2 mt-8">
+                <p class="px-4 py-2 text-xs font-bold text-gray-400 dark:text-gray-400 uppercase tracking-widest border-b border-white/10 bg-gray-800/60 backdrop-blur-sm">
+                  GESTION
+                </p>
+                <a href="#battery" class="nav-link flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                  <i class="fas fa-battery-three-quarters mr-3"></i>
+                  Batterie
+                </a>
+                <a href="#water" class="nav-link flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                  <i class="fas fa-tint mr-3"></i>
+                  Réservoir d'eau
+                </a>
+                <a href="#automation" class="nav-link flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                  <i class="fas fa-robot mr-3"></i>
+                  Automatisation
+                </a>
+                <a href="#settings" class="nav-link flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                  <i class="fas fa-cog mr-3"></i>
+                  Paramètres
+                </a>
+              </div>
+              <div class="space-y-2 mt-8">
+                <p class="px-4 py-2 text-xs font-bold text-gray-400 dark:text-gray-400 uppercase tracking-widest border-b border-white/10 bg-gray-800/60 backdrop-blur-sm">
+                  PAIEMENTS
+                </p>
+                <a href="#payments" class="nav-link flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                  <i class="fas fa-coins mr-3"></i>
+                  Méthodes de Paiement
+                </a>
+              </div>
+            </nav>
+          </div>
+          
+          <!-- Sidebar footer -->
+          <div class="p-4 border-t border-gray-200 dark:border-gray-600 glass-card">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center min-w-0">
+                <div class="flex-shrink-0">
+                  <div id="sidebar-avatar" class="h-10 w-10 rounded-full bg-gradient-to-r from-primary to-secondary flex items-center justify-center text-white">
+                    <span>AD</span>
+                  </div>
+                </div>
+                <div class="ml-3 min-w-0">
+                  <p id="sidebar-username" class="text-sm font-medium text-gray-900 dark:text-white truncate">Admin</p>
+                  <p id="sidebar-role" class="text-xs text-gray-500 dark:text-gray-400">Administrateur</p>
+                </div>
+              </div>
+              <div class="flex items-center space-x-1">
+                <div class="w-2 h-2 bg-green-500 rounded-full status-indicator online"></div>
+              </div>
+            </div>
+            <!-- System Health -->
+            <div class="mt-3 space-y-1">
+              <div class="flex justify-between text-xs text-gray-500">
+                <span>Système</span>
+                <span>98%</span>
+              </div>
+              <div class="progress-container">
+                <div class="progress-bar" style="width: 98%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="flex-1 overflow-y-auto focus:outline-none bg-gray-50 dark:bg-gray-900 transition-colors" style="position: relative; z-index: 2;">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          
+          <!-- Dashboard Section -->
+          <div id="dashboard-section" class="section-content">
+            <!-- Quick Stats -->
+            <div class="smart-grid mb-8">
+              <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 glass-card hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 reveal">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Production actuelle</p>
+                    <p id="current-production" class="text-2xl font-bold text-gray-900 dark:text-white">6.2 kW</p>
+                    <p class="text-xs text-green-600 dark:text-green-400 mt-1">↗ +12% vs hier</p>
+                  </div>
+                  <div class="p-3 bg-blue-100 dark:bg-blue-900/20 rounded-lg animate-float">
+                    <i class="fas fa-solar-panel text-blue-600 dark:text-blue-400 text-xl"></i>
+                  </div>
+                </div>
+              </div>
+
+              <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 glass-card hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 reveal">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Batterie intelligente</p>
+                    <p id="battery-level" class="text-2xl font-bold text-gray-900 dark:text-white">88%</p>
+                    <p class="text-xs text-blue-600 dark:text-blue-400 mt-1">6h 30min restant</p>
+                  </div>
+                  <div class="p-3 bg-green-100 dark:bg-green-900/20 rounded-lg animate-float">
+                    <i class="fas fa-battery-three-quarters text-green-600 dark:text-green-400 text-xl"></i>
+                  </div>
+                </div>
+              </div>
+
+              <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 glass-card hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 reveal">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Consommation optimisée</p>
+                    <p id="current-consumption" class="text-2xl font-bold text-gray-900 dark:text-white">4.1 kW</p>
+                    <p class="text-xs text-yellow-600 dark:text-yellow-400 mt-1">Optimal • Réduction 15%</p>
+                  </div>
+                  <div class="p-3 bg-yellow-100 dark:bg-yellow-900/20 rounded-lg animate-float">
+                    <i class="fas fa-bolt text-yellow-600 dark:text-yellow-400 text-xl"></i>
+                  </div>
+                </div>
+              </div>
+
+              <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 glass-card hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 reveal">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Économies intelligentes</p>
+                    <p id="daily-savings" class="text-2xl font-bold text-gray-900 dark:text-white">12.5 DT</p>
+                    <p class="text-xs text-green-600 dark:text-green-400 mt-1">385 DT ce mois • +23%</p>
+                  </div>
+                  <div class="p-3 bg-purple-100 dark:bg-purple-900/20 rounded-lg animate-float">
+                    <i class="fas fa-coins text-purple-600 dark:text-purple-400 text-xl"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              <!-- Production Chart -->
+              <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 glass-card reveal chart-container">
+                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Production d'énergie en temps réel</h3>
+                <div class="h-64">
+                  <canvas id="productionChart"></canvas>
+                </div>
+              </div>
+
+              <!-- Consumption Chart -->
+              <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 glass-card reveal chart-container">
+                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Répartition de la consommation</h3>
+                <div class="h-64">
+                  <canvas id="consumptionChart"></canvas>
+                </div>
+              </div>
+            </div>
+
+            <!-- Gideon AI Assistant Section -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 glass-card reveal">
+              <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center">
+                <i class="fas fa-robot text-primary mr-2 animate-float"></i>
+                Assistant IA Gideon • Quantum Neural Network
+                <span class="ml-2 px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full pulse-animation">En ligne</span>
+              </h3>
+              
+              <!-- Gideon AI Interface -->
+              <div id="gideon-ai-container" class="gideon-ai-interface">
+                <div class="gideon-chat-container">
+                  <div class="gideon-chat-messages" id="gideon-chat-messages">
+                    <div class="gideon-message gideon-assistant-message">
+                      <span class="gideon-command-prompt">></span> Système Gideon initialisé. Neural Network en ligne. Comment puis-je vous assister avec votre système photovoltaïque ?
+                    </div>
+                  </div>
+                  <div class="gideon-typing-indicator" id="gideon-typing-indicator">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                    <span style="margin-left: 10px; font-size: 0.9rem;">Traitement neural en cours...</span>
+                  </div>
+                  <div class="gideon-input-area">
+                    <input type="text" id="gideon-user-input" placeholder="Entrez votre commande ou question..." autofocus>
+                    <button id="gideon-send-btn">TRANSMETTRE</button>
+                  </div>
+                </div>
+
+                <div class="gideon-controls">
+                  <button class="gideon-control-btn" id="gideon-voice-btn">
+                    <i class="fas fa-microphone"></i> Interface Vocale
+                  </button>
+                  <button class="gideon-control-btn" id="gideon-clear-btn">
+                    <i class="fas fa-eraser"></i> Purger Mémoire
+                  </button>
+                  <button class="gideon-control-btn" id="gideon-memory-btn">
+                    <i class="fas fa-database"></i> Base de Données
+                  </button>
+                  <button class="gideon-control-btn" id="gideon-settings-btn">
+                    <i class="fas fa-cog"></i> Paramètres Système
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- System Controls -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+              <!-- Battery Controls -->
+              <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 glass-card reveal">
+                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center">
+                  <i class="fas fa-battery-three-quarters text-green-500 mr-2 animate-float"></i>
+                  Contrôle batterie IA
+                </h3>
+                <div class="space-y-4">
+                  <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Mode intelligent</span>
+                    <select id="battery-mode" class="text-sm bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-2 py-1">
+                      <option value="ai">IA Optimisée</option>
+                      <option value="eco">Économique</option>
+                      <option value="performance">Performance</option>
+                    </select>
+                  </div>
+                  <button id="force-charge" class="btn-advanced w-full text-sm">
+                    <i class="fas fa-zap mr-2"></i>Charge optimisée IA
+                  </button>
+                </div>
+              </div>
+
+              <!-- Water Pump Controls -->
+              <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 glass-card reveal">
+                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center">
+                  <i class="fas fa-tint text-blue-500 mr-2 animate-float"></i>
+                  Pompe intelligente
+                </h3>
+                <div class="space-y-4">
+                  <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600 dark:text-gray-400">État système</span>
+                    <span id="pump-status" class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full status-indicator online">Actif • IA</span>
+                  </div>
+                  <div class="grid grid-cols-2 gap-2">
+                    <button id="start-pump" class="btn-advanced text-xs px-3 py-2">
+                      <i class="fas fa-play mr-1"></i>Démarrer
+                    </button>
+                    <button id="stop-pump" class="bg-red-500 text-white text-xs px-3 py-2 rounded hover:bg-red-600 transition-colors">
+                      <i class="fas fa-stop mr-1"></i>Arrêter
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- System Settings -->
+              <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 glass-card reveal">
+                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center">
+                  <i class="fas fa-robot text-purple-500 mr-2 animate-float"></i>
+                  IA & Automatisation
+                </h3>
+                <div class="space-y-4">
+                  <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Optimisation IA</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" id="ai-optimization" class="sr-only peer" checked>
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                    </label>
+                  </div>
+                  <button id="system-restart" class="bg-gradient-to-r from-orange-500 to-red-500 text-white w-full py-2 rounded-lg hover:from-orange-600 hover:to-red-600 transition-all duration-300 text-sm">
+                    <i class="fas fa-sync-alt mr-2"></i>Redémarrage intelligent
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Analytics Section -->
+          <div id="analytics-section" class="section-content hidden">
+            <div class="mb-6 reveal">
+              <h2 class="text-2xl font-bold text-gray-900 dark:text-white gradient-text">Analytics Avancées • IA</h2>
+              <p class="text-gray-600 dark:text-gray-400">Tableau de bord analytique avec intelligence artificielle</p>
+            </div>
+            
+            <div class="text-center py-20">
+              <i class="fas fa-chart-line text-6xl text-gray-300 mb-4"></i>
+              <h3 class="text-xl font-semibold text-gray-600 dark:text-gray-400">Analytics en développement</h3>
+              <p class="text-gray-500">Fonctionnalités avancées d'analyse disponibles prochainement</p>
+            </div>
+          </div>
+
+          <!-- Production Section -->
+          <div id="production-section" class="section-content hidden">
+            <div class="mb-6 reveal">
+              <h2 class="text-2xl font-bold text-gray-900 dark:text-white gradient-text">Gestion de la Production</h2>
+              <p class="text-gray-600 dark:text-gray-400">Monitoring et contrôle avancé de la production photovoltaïque</p>
+            </div>
+            
+            <div class="text-center py-20">
+              <i class="fas fa-solar-panel text-6xl text-gray-300 mb-4"></i>
+              <h3 class="text-xl font-semibold text-gray-600 dark:text-gray-400">Gestion Production</h3>
+              <p class="text-gray-500">Interface de contrôle de production en développement</p>
+            </div>
+          </div>
+
+          <!-- Battery Section -->
+          <div id="battery-section" class="section-content hidden">
+            <div class="mb-6 reveal">
+              <h2 class="text-2xl font-bold text-gray-900 dark:text-white gradient-text">Gestion Intelligente des Batteries</h2>
+              <p class="text-gray-600 dark:text-gray-400">Système de stockage énergétique avec IA</p>
+            </div>
+            
+            <div class="text-center py-20">
+              <i class="fas fa-battery-three-quarters text-6xl text-gray-300 mb-4"></i>
+              <h3 class="text-xl font-semibold text-gray-600 dark:text-gray-400">Gestion Batterie</h3>
+              <p class="text-gray-500">Interface de gestion des batteries en développement</p>
+            </div>
+          </div>
+
+          <!-- Water Section -->
+          <div id="water-section" class="section-content hidden">
+            <div class="mb-6 reveal">
+              <h2 class="text-2xl font-bold text-gray-900 dark:text-white gradient-text">Gestion Intelligente de l'Eau</h2>
+              <p class="text-gray-600 dark:text-gray-400">Système IoT pour réservoir et pompage solaire</p>
+            </div>
+            
+            <div class="text-center py-20">
+              <i class="fas fa-tint text-6xl text-gray-300 mb-4"></i>
+              <h3 class="text-xl font-semibold text-gray-600 dark:text-gray-400">Gestion Eau</h3>
+              <p class="text-gray-500">Interface de gestion de l'eau en développement</p>
+            </div>
+          </div>
+
+          <!-- Automation Section -->
+          <div id="automation-section" class="section-content hidden">
+            <div class="mb-6 reveal">
+              <h2 class="text-2xl font-bold text-gray-900 dark:text-white gradient-text">Centre d'Automatisation IA</h2>
+              <p class="text-gray-600 dark:text-gray-400">Contrôle intelligent et automatisation avancée du système</p>
+            </div>
+            
+            <div class="text-center py-20">
+              <i class="fas fa-robot text-6xl text-gray-300 mb-4"></i>
+              <h3 class="text-xl font-semibold text-gray-600 dark:text-gray-400">Automatisation</h3>
+              <p class="text-gray-500">Centre d'automatisation en développement</p>
+            </div>
+          </div>
+
+          <!-- Settings Section -->
+          <div id="settings-section" class="section-content hidden">
+            <div class="mb-6 reveal">
+              <h2 class="text-2xl font-bold text-gray-900 dark:text-white gradient-text">Paramètres Système</h2>
+              <p class="text-gray-600 dark:text-gray-400">Configuration avancée et personnalisation du système</p>
+            </div>
+            
+            <div class="text-center py-20">
+              <i class="fas fa-cog text-6xl text-gray-300 mb-4"></i>
+              <h3 class="text-xl font-semibold text-gray-600 dark:text-gray-400">Paramètres</h3>
+              <p class="text-gray-500">Interface de configuration en développement</p>
+            </div>
+          </div>
+
+          <!-- Payments Section -->
+          <div id="payments-section" class="section-content hidden">
+            <div class="mb-6 reveal">
+              <h2 class="text-2xl font-bold text-gray-900 dark:text-white gradient-text">Méthodes de Paiement</h2>
+              <p class="text-gray-600 dark:text-gray-400">Vendez votre surplus d'énergie solaire via différentes méthodes de paiement sécurisées</p>
+            </div>
+
+            <!-- Payment Methods Grid -->
+            <div class="smart-grid mb-8">
+              <!-- Hedera HBAR Payment -->
+              <div class="glass-card p-6 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 reveal">
+                <div class="flex items-center space-x-4 mb-4">
+                  <div class="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 flex items-center justify-center text-white">
+                    <i class="fas fa-coins text-xl"></i>
+                  </div>
+                  <div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Hedera (HBAR)</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Paiement via Hashgraph</p>
+                  </div>
+                </div>
+                <div class="mb-4">
+                  <div class="flex justify-between text-sm text-gray-500 mb-2">
+                    <span>Solde disponible:</span>
+                    <span class="font-medium text-primary">1 HBAR=0,51003 TND</span>
+                  </div>
+                  <div class="progress-container">
+                    <div class="progress-bar" style="width: 65%"></div>
+                  </div>
+                </div>
+                <button class="btn-advanced w-full" id="connect-hashpack">
+                  <i class="fas fa-wallet mr-2"></i>Connecter HashPack
+                </button>
+              </div>
+
+              <!-- Bitcoin Payment -->
+              <div class="glass-card p-6 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 reveal">
+                <div class="flex items-center space-x-4 mb-4">
+                  <div class="w-12 h-12 rounded-full bg-gradient-to-r from-yellow-500 to-orange-500 flex items-center justify-center text-white">
+                    <i class="fab fa-bitcoin text-xl"></i>
+                  </div>
+                  <div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Bitcoin</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Paiement cryptographique</p>
+                  </div>
+                </div>
+                <div class="mb-4">
+                  <div class="flex justify-between text-sm text-gray-500 mb-2">
+                    <span>Taux actuel:</span>
+                    <span class="font-medium text-yellow-600">1 BTC = 314.109,64 TND</span>
+                  </div>
+                </div>
+                <button class="btn-advanced w-full" id="generate-btc-qr">
+                  <i class="fas fa-qrcode mr-2"></i>Générer QR Code
+                </button>
+              </div>
+
+              <!-- Ethereum Payment -->
+              <div class="glass-card p-6 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 reveal">
+                <div class="flex items-center space-x-4 mb-4">
+                  <div class="w-12 h-12 rounded-full bg-gradient-to-r from-indigo-500 to-blue-500 flex items-center justify-center text-white">
+                    <i class="fab fa-ethereum text-xl"></i>
+                  </div>
+                  <div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Ethereum</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Paiement via Smart Contracts</p>
+                  </div>
+                </div>
+                <div class="mb-4">
+                  <div class="flex justify-between text-sm text-gray-500 mb-2">
+                    <span>Gas fee estimé:</span>
+                    <span class="font-medium text-blue-600">0.0012 ETH</span>
+                  </div>
+                </div>
+                <button class="btn-advanced w-full" id="connect-metamask">
+                  <i class="fas fa-plug mr-2"></i>Connecter MetaMask
+                </button>
+              </div>
+
+              <!-- STB Bank (TND) -->
+              <div class="glass-card p-6 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 reveal">
+                <div class="flex items-center space-x-4 mb-4">
+                  <div class="w-12 h-12 rounded-full bg-gradient-to-r from-green-500 to-teal-500 flex items-center justify-center text-white">
+                    <i class="fas fa-university text-xl"></i>
+                  </div>
+                  <div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">STB Bank</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Paiement en Dinar Tunisien</p>
+                  </div>
+                </div>
+                <div class="mb-4">
+                  <div class="flex justify-between text-sm text-gray-500 mb-2">
+                    <span>Taux de change:</span>
+                    <span class="font-medium text-green-600">1 DT = 0.31 USD</span>
+                  </div>
+                </div>
+                <button class="btn-advanced w-full" id="bank-transfer">
+                  <i class="fas fa-credit-card mr-2"></i>Paiement Bancaire
+                </button>
+              </div>
+            </div>
+
+            <!-- Payment Form -->
+            <div class="glass-card p-6 reveal">
+              <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Vendre de l'énergie solaire</h3>
+              <form id="energy-sale-form" class="space-y-4">
+                <div>
+                  <label for="energy-amount" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Quantité d'énergie (kWh)</label>
+                  <input type="number" id="energy-amount" class="w-full px-4 py-3 text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-300" placeholder="Ex: 15.5" step="0.1" min="0" required>
+                </div>
+                
+                <div>
+                  <label for="payment-method" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Méthode de paiement</label>
+                  <select id="payment-method" class="w-full px-4 py-3 text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-300">
+                    <option value="hbar">Hedera (HBAR)</option>
+                    <option value="btc">Bitcoin (BTC)</option>
+                    <option value="eth">Ethereum (ETH)</option>
+                    <option value="tnd">Dinar Tunisien (TND)</option>
+                  </select>
+                </div>
+                
+                <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                  <div class="flex justify-between text-sm text-gray-600 dark:text-gray-300 mb-2">
+                    <span>Prix unitaire:</span>
+                    <span id="unit-price" class="font-medium">0.85 DT/kWh</span>
+                  </div>
+                  <div class="flex justify-between text-sm text-gray-600 dark:text-gray-300 mb-2">
+                    <span>Montant estimé:</span>
+                    <span id="estimated-amount" class="font-medium text-primary">0.00 DT</span>
+                  </div>
+                  <div class="progress-container mt-2">
+                    <div class="progress-bar" id="amount-progress" style="width: 0%"></div>
+                  </div>
+                </div>
+                
+                <button type="submit" class="btn-advanced w-full">
+                  <i class="fas fa-bolt mr-2"></i>Vendre maintenant
+                </button>
+              </form>
+            </div>
+
+            <!-- Transaction History -->
+            <div class="glass-card p-6 mt-6 reveal">
+              <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Historique des transactions</h3>
+              <div class="space-y-3" id="transaction-history">
+                <div class="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                  <div class="flex items-center">
+                    <i class="fas fa-coins text-green-500 mr-3"></i>
+                    <div>
+                      <div class="font-medium">Vente HBAR</div>
+                      <div class="text-sm text-gray-500">12.5 kWh • Aujourd'hui 14:32</div>
+                    </div>
+                  </div>
+                  <span class="font-bold text-green-600">+10.63 DT</span>
+                </div>
+                <div class="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                  <div class="flex items-center">
+                    <i class="fab fa-bitcoin text-yellow-500 mr-3"></i>
+                    <div>
+                      <div class="font-medium">Vente Bitcoin</div>
+                      <div class="text-sm text-gray-500">8.2 kWh • Hier 16:45</div>
+                    </div>
+                  </div>
+                  <span class="font-bold text-blue-600">+6.97 DT</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Mobile Bottom Navigation -->
+  <div id="mobile-nav" class="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-600 z-30 md:hidden mobile-nav glass-card rounded-none">
+    <div class="grid grid-cols-5 gap-1 p-2">
+      <button class="mobile-nav-btn flex flex-col items-center py-2 px-1 text-xs text-primary transition-all duration-300" data-section="dashboard">
+        <i class="fas fa-home text-lg mb-1"></i>
+        <span>Accueil</span>
+      </button>
+      <button class="mobile-nav-btn flex flex-col items-center py-2 px-1 text-xs text-gray-400 transition-all duration-300" data-section="analytics">
+        <i class="fas fa-chart-bar text-lg mb-1"></i>
+        <span>Analytics</span>
+      </button>
+      <button class="mobile-nav-btn flex flex-col items-center py-2 px-1 text-xs text-gray-400 transition-all duration-300" data-section="battery">
+        <i class="fas fa-battery-three-quarters text-lg mb-1"></i>
+        <span>Batterie</span>
+      </button>
+      <button class="mobile-nav-btn flex flex-col items-center py-2 px-1 text-xs text-gray-400 transition-all duration-300" data-section="automation">
+        <i class="fas fa-robot text-lg mb-1"></i>
+        <span>Auto</span>
+      </button>
+      <button class="mobile-nav-btn flex flex-col items-center py-2 px-1 text-xs text-gray-400 transition-all duration-300" data-section="payments">
+        <i class="fas fa-coins text-lg mb-1"></i>
+        <span>Paiements</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="fixed top-20 right-4 z-50 space-y-2"></div>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
